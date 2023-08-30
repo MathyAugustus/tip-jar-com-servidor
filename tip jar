@@ -1,0 +1,108 @@
+key gKeyServer = "3f5dfd98-84c7-2965-b3eb-f616670463c1";
+key gKeyQuery;
+
+integer gIntegerAmount;
+
+float gFloatElapsedTime = 6.0;
+
+string gStringPasswd = "teste";
+
+vector gVectorColor = <0.0,0.0,1.0>;
+
+amUpdateText( string pStringName , string pStringAmount , string pStringTotal )
+{
+
+    llSetText( pStringName + " nos doou L$" + pStringAmount +"\nTotal doado L$" + pStringTotal, gVectorColor , 1.0 );         
+    
+}
+
+default
+{
+    
+    on_rez( integer pIntegerParam )
+    {
+     
+        llResetScript();   
+        
+    }
+    
+    state_entry()
+    {
+        
+        llRequestPermissions( llGetOwner() , PERMISSION_DEBIT );
+        
+    }
+    
+    run_time_permissions( integer pIntegerPerm )
+    {
+ 
+        if( pIntegerPerm & PERMISSION_DEBIT )
+            state Money;       
+        
+    }
+    
+}
+
+state Money
+{
+    
+    money( key pKeyAVID , integer pIntegerAmount )
+    {
+        
+        llEmail( (string)gKeyServer + "@lsl.secondlife.com" , gStringPasswd , "++" + llKey2Name( pKeyAVID ) + "|" + (string)pIntegerAmount );
+        
+    }
+    
+    state_entry()
+    {
+        
+        llSetText( "", <1.0,1.0,1.0> , 1.0 );
+        
+        llSetTimerEvent( gFloatElapsedTime );
+        
+    }
+    
+    timer()
+    {
+
+        llGetNextEmail( "" , "" );
+        
+    }
+    
+    touch_start( integer pIntegerAVS )
+    {
+        
+        integer pIntegerIndex;
+        
+        for( pIntegerIndex ; pIntegerIndex < pIntegerAVS ; pIntegerIndex++ )
+            if( llDetectedKey( pIntegerIndex ) == llGetOwner() )
+                llOwnerSay( "chave = " + (string)llGetKey() );
+                
+    }
+    
+    email( string pStringTime , string pStringAddress , string pStringSubject , string pStringMessage , integer pIntegerNum )
+    {
+     
+        if ( pStringAddress == (string)gKeyServer + "@lsl.secondlife.com" && pStringSubject == gStringPasswd )
+        {
+         
+            integer pIntegerPipeIndex = llSubStringIndex( pStringMessage , "||" );
+            
+            integer pIntegerPlusIndex = llSubStringIndex( pStringMessage , "++" );
+            
+            integer pIntegerMinusIndex = llSubStringIndex( pStringMessage , "--" );
+            
+            integer pIntegerAmount = (integer)llGetSubString( pStringMessage , ( pIntegerPipeIndex + 1 ) , ( llStringLength( pStringMessage ) - 1 ) );
+            
+            integer pIntegerTotal;
+            
+            amUpdateText( llGetSubString( pStringMessage , ( pIntegerMinusIndex + 2 ) , ( pIntegerPipeIndex - 1 ) ) , llGetSubString( pStringMessage , ( pIntegerPipeIndex + 2 ) , ( pIntegerPlusIndex - 1 ) ) , llGetSubString( pStringMessage , ( pIntegerPlusIndex + 2 ) , ( llStringLength( pStringMessage ) - 1 ) ) );
+            
+        }
+        
+        if( pIntegerNum )
+            llGetNextEmail( "" , "" );
+        
+    }
+    
+}

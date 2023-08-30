@@ -1,0 +1,68 @@
+list gListTipJarsKeys = [ "cf782c98-aadc-284e-b3bd-6ff2e9e82fcb" , "85e5cd2d-6df3-5f8a-c234-d307e2305105" ];
+
+string gStringPasswd = "teste";
+
+float gFloatElapsedTime = 6.0;
+
+integer gIntegerTotal = 0;
+
+default
+{
+    
+    touch_start( integer pIntegerAVS )
+    {
+        
+        integer pIntegerIndex;
+        
+        for( pIntegerIndex ; pIntegerIndex < pIntegerAVS ; pIntegerIndex++ )
+            if( llDetectedKey( pIntegerIndex ) == llGetOwner() )
+                llOwnerSay( "chave = " + (string)llGetKey() );
+                
+    }
+    
+    state_entry()
+    {
+        
+        llSetText("",<1.0,1.0,1.0>,1.0);
+        
+        llSetTimerEvent( gFloatElapsedTime );
+        
+    }
+    
+    timer()
+    {
+        
+        llGetNextEmail( "" , "" );
+        
+    }
+    
+    email( string pStringTime , string pStringAddress , string pStringSubject , string pStringMessage , integer pIntegerNum )
+    {
+        
+        string pNameEmailDonated = llGetSubString( pStringMessage , ( llSubStringIndex( pStringMessage , "++" ) + 2 ) , ( llSubStringIndex( pStringMessage , "|" ) - 1 ) );
+        
+        integer pIntegerDonated = (integer)llGetSubString( pStringMessage , ( llSubStringIndex( pStringMessage , "|" ) + 1 ) , ( llStringLength( pStringMessage ) - 1 ) );
+        llSetObjectDesc((string)gIntegerTotal);
+    
+        gIntegerTotal += pIntegerDonated;
+        
+        llSetText( "Total = L$" + (string)gIntegerTotal , <1.0,0.0,0.0> , 1.0 );            
+        
+        key pKeyEmail = (key)pStringAddress;
+        
+        if( llListFindList( gListTipJarsKeys , (list)pKeyEmail ) &&  llGetSubString( pStringAddress, -19, -1) == "@lsl.secondlife.com" && pStringSubject == gStringPasswd )
+        {
+            
+            integer pIntegerIndex;
+    
+            for( pIntegerIndex = 0 ; pIntegerIndex < llGetListLength( gListTipJarsKeys ) ; pIntegerIndex++ )
+                llEmail( llList2String( gListTipJarsKeys , pIntegerIndex ) + "@lsl.secondlife.com" , gStringPasswd ,  "--" + pNameEmailDonated + "||" + (string)pIntegerDonated + "++" + (string)gIntegerTotal );
+                    
+        }
+                    
+        if( pIntegerNum )
+            llGetNextEmail( "" , "" );
+        
+    }
+    
+}
